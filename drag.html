@@ -1,0 +1,117 @@
+<style type="text/css">
+*{
+	margin: 0;
+	padding: 0;
+}
+.wrapper {
+	border: 1px solid red;
+	width: 240px;
+	height: 240px;
+	margin: 50px;
+}
+#dragCircle {
+	background: #bcbcbc;
+	position: absolute;
+	text-align: center; 
+	border: 1px solid #49af4f;
+	padding: 10px 20px;
+}
+</style>
+<div class="wrapper">
+  <div id="dragCircle">来拖我呀</div>  
+  <div style="width: 100%;height: 100%;position: relative;pointer-events: none;">
+  	<div id="line1" style="display: none;border-top: 1px dashed #ddd; width: 100%;position: absolute;top: 50%"></div>
+  	<div id="line2" style="display: none;border-left: 1px dashed #ddd; height: 100%;position: absolute;left: 50%"></div>
+  </div>
+  
+</div>
+<script type="text/javascript">
+	/* 获取绝对位置 */
+	function posLeft(obj){
+	    var iLeft = 0;
+	    while(obj){
+	        iLeft += obj.offsetLeft;
+	        obj = obj.offsetParent;
+	        if(obj && obj!=document.body && obj!=document.documentElement){
+	            iLeft += getStyle(obj, 'borderLeftWidth');
+	        }
+	    }
+	    return iLeft;
+	}
+	function posTop(obj){
+	    var iTop = 0;
+	    while(obj){
+	        iTop += obj.offsetTop;
+	        obj = obj.offsetParent;
+	        if(obj && obj!=document.body && obj!=document.documentElement){
+	            iTop += getStyle(obj, 'borderTopWidth');
+	        }
+	    }
+	    return iTop;
+	}
+	function getStyle(obj,attr){
+	    if(obj.currentStyle){
+	        return parseFloat( obj.currentStyle[attr]) || 0;
+	    }
+	    return parseFloat( getComputedStyle(obj)[attr]) || 0;
+	}
+	window.onload = function() {
+	  var dragCircle = document.getElementById('dragCircle');
+	  var wrapper = document.querySelector(".wrapper");
+	  var lineLeft = document.getElementById("line1");
+	  var lineTop = document.getElementById("line2");
+
+	  var range = {
+	    left    : posLeft(wrapper),  
+	    right   : posLeft(wrapper) + wrapper.offsetWidth - dragCircle.offsetWidth,
+	    top     : posTop(wrapper),
+	    bottom  : posTop(wrapper) + wrapper.offsetHeight - dragCircle.offsetHeight
+	  };
+
+	  window.lineTopLeft = wrapper.offsetWidth / 2 + range.left;
+	  window.lineTopTop = wrapper.offsetHeight / 2 + range.top;
+
+	// 获取鼠标点击时在div中的相对位置
+	    dragCircle.onmousedown = function(ev) {
+	        var ev = ev || window.event; 
+	        var relaX = ev.clientX - this.offsetLeft;
+	        var relaY = ev.clientY - this.offsetTop;
+
+	// 获取当前鼠标位置，减去与div的相对位置得到当前div应该被拖拽的位置
+	        document.onmousemove = function(ev) {
+	            var ev = ev || window.event;
+	            var left = ev.clientX - relaX;
+	            var top = ev.clientY - relaY;
+				if(left < range.left) {
+					dragCircle.style.left = range.left + 'px'
+				}else if(left > range.right) {
+					dragCircle.style.left = range.right + 'px'
+				}else if(Math.abs(left + dragCircle.offsetWidth / 2 - window.lineTopLeft) < 2 || Math.abs(window.lineTopLeft- left - dragCircle.offsetWidth / 2) < 2){
+						lineTop.style.display = 'block';
+						dragCircle.style.left = window.lineTopLeft - dragCircle.offsetWidth / 2;
+				}else{
+					lineTop.style.display = 'none';
+					dragCircle.style.left = left + 'px';
+				}
+	          
+				if(top < range.top) {
+					dragCircle.style.top = range.top + 'px'
+				}else if(top > range.bottom) {
+					dragCircle.style.top = range.bottom + 'px'
+				}else if(Math.abs(top + dragCircle.offsetHeight / 2 - window.lineTopTop) < 2 || Math.abs(window.lineTopTop - top - dragCircle.offsetHeight / 2) < 2){
+						lineLeft.style.display = 'block';
+						dragCircle.style.top = window.lineTopTop - dragCircle.offsetHeight / 2;
+				}else{
+					lineLeft.style.display = 'none';
+					dragCircle.style.top = top + 'px';
+				}
+	        };
+	        document.onmouseup = function(ev) {
+				document.onmousemove = null;
+				document.onmouseup = null;
+				lineLeft.style.display = 'none';
+				lineTop.style.display = 'none';
+	         }
+	     }
+	}
+</script>
